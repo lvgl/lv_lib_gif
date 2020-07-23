@@ -26,7 +26,7 @@ static void next_frame_tesk_cb(lv_task_t * t);
  *  STATIC VARIABLES
  **********************/
 static gd_GIF *gif;
-static lv_color_t cbuf[320*320];
+static uint8_t buf[256*4 + 320 *320];
 static lv_obj_t * img;
 static lv_img_dsc_t imgdsc;
 
@@ -46,18 +46,18 @@ lv_obj_t * lv_gif_create(lv_obj_t * parent)
     printf("canvas size: %ux%u\n", gif->width, gif->height);
     printf("number of colors: %d\n", gif->palette->size);
 
-    uint8_t buf[gif->width * gif->height * 3];
 
-    uint32_t i;
-    for(i = 0; i < gif->width * gif->height; i++) {
-        cbuf[i] = lv_color_make(buf[i * 3], buf[i * 3 + 1], buf[i * 3 + 2]);
-    }
-
-    imgdsc.data = cbuf;
+    imgdsc.data = buf;
     imgdsc.header.always_zero = 0;
     imgdsc.header.cf = LV_IMG_CF_INDEXED_8BIT;
     imgdsc.header.h = gif->height;
     imgdsc.header.w = gif->width;
+
+    uint32_t i;
+    for(i = 0; i < 256; i++) {
+        lv_color_t c = lv_color_make(gif->palette->colors[3 * i], gif->palette->colors[3 * i + 1], gif->palette->colors[3 * i + 2]);
+        lv_img_buf_set_palette(&imgdsc, i, c);
+    }
 
     img = lv_img_create(parent, NULL);
     lv_img_set_src(img, &imgdsc);
@@ -80,17 +80,10 @@ static void next_frame_tesk_cb(lv_task_t * t)
         return;
     }
 
-    uint8_t buf[gif->width * gif->height * 3];
-
     gd_get_frame(gif);
-    gd_render_frame(gif, buf);
+    gd_render_frame(gif, buf+256*4);
 
     counter = gif->gce.delay;
-
-    uint32_t i;
-    for(i = 0; i < gif->width * gif->height; i++) {
-        cbuf[i] = lv_color_make(buf[i * 3], buf[i * 3 + 1], buf[i * 3 + 2]);
-    }
 
     lv_obj_invalidate(img);
 }

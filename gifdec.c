@@ -410,15 +410,16 @@ read_image(gd_GIF *gif)
 static void
 render_frame_rect(gd_GIF *gif, uint8_t *buffer)
 {
-    int i, j, k;
-    uint8_t index, *color;
+    int i, y, x;
+    uint8_t index;
     i = gif->fy * gif->width + gif->fx;
-    for (j = 0; j < gif->fh; j++) {
-        for (k = 0; k < gif->fw; k++) {
-            index = gif->frame[(gif->fy + j) * gif->width + gif->fx + k];
-            color = &gif->palette->colors[index*3];
+    for (y = 0; y < gif->fh; y++) {
+        for (x = 0; x < gif->fw; x++) {
+            index = gif->frame[(gif->fy + y) * gif->width + gif->fx + x];
+//            color = &gif->palette->colors[index*3];
             if (!gif->gce.transparency || index != gif->gce.tindex)
-                memcpy(&buffer[(i+k)*3], color, 3);
+                buffer[i+x] = index;
+//                memcpy(&buffer[(i+k)*3], color, 3);
         }
         i += gif->width;
     }
@@ -431,13 +432,14 @@ dispose(gd_GIF *gif)
     uint8_t *bgcolor;
     switch (gif->gce.disposal) {
     case 2: /* Restore to background color. */
-        bgcolor = &gif->palette->colors[gif->bgindex*3];
-        i = gif->fy * gif->width + gif->fx;
-        for (j = 0; j < gif->fh; j++) {
-            for (k = 0; k < gif->fw; k++)
-                memcpy(&gif->canvas[(i+k)*3], bgcolor, 3);
-            i += gif->width;
-        }
+        memset(gif->canvas, gif->palette->colors[gif->bgindex], gif->fh);
+//        bgcolor = &gif->palette->colors[gif->bgindex*3];
+//        i = gif->fy * gif->width + gif->fx;
+//        for (j = 0; j < gif->fh; j++) {
+//            for (k = 0; k < gif->fw; k++)
+//                memcpy(&gif->canvas[(i+k)*3], bgcolor, 3);
+//            i += gif->width;
+//        }
         break;
     case 3: /* Restore to previous, i.e., don't update canvas.*/
         break;
@@ -471,7 +473,7 @@ gd_get_frame(gd_GIF *gif)
 void
 gd_render_frame(gd_GIF *gif, uint8_t *buffer)
 {
-    memcpy(buffer, gif->canvas, gif->width * gif->height * 3);
+    memcpy(buffer, gif->canvas, gif->width * gif->height);
     render_frame_rect(gif, buffer);
 }
 
