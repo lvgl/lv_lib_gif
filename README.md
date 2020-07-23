@@ -1,2 +1,4 @@
-# _template
-Template repo with README and CI settings
+# GIF library for LVGL
+
+**Work in progress**
+Based on https://github.com/lecram/gifdec
