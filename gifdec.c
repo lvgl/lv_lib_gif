@@ -77,21 +77,31 @@ gd_open_gif(const char *fname)
     /* Aspect Ratio */
     read(fd, &aspect, 1);
     /* Create gd_GIF Structure. */
-    gif = calloc(1, sizeof(*gif) + 4 * width * height);
+    gif = calloc(1, sizeof(*gif) + 256 * 4 + 2 * width * height);
     if (!gif) goto fail;
+    gif->palette = (uint8_t *) &gif[1];
+    gif->canvas = (uint8_t *) &gif->palette[256 * 4];
+    gif->frame = &gif->canvas[width * height];
+
     gif->fd = fd;
     gif->width  = width;
     gif->height = height;
     gif->depth  = depth;
     /* Read GCT */
-    gif->gct.size = gct_sz;
-    read(fd, gif->gct.colors, 3 * gif->gct.size);
-    gif->palette = &gif->gct;
+    gif->gct_size = gct_sz;
+    read(fd, gif->global_palette, 3 * gif->gct_size);
+    /*Make the color LGL compatible (add alpha byte)*/
+    uint32_t i;
+    for(i = 0; i < gct_sz; i++) {
+        gif->palette[i * 4 + 0] = gif->global_palette[i * 3 + 2];
+        gif->palette[i * 4 + 1] = gif->global_palette[i * 3 + 1];
+        gif->palette[i * 4 + 2] = gif->global_palette[i * 3 + 0];
+        gif->palette[i * 4 + 3] = 0xFF;
+    }
     gif->bgindex = bgidx;
-    gif->canvas = (uint8_t *) &gif[1];
-    gif->frame = &gif->canvas[3 * width * height];
+
     if (gif->bgindex)
-        memset(gif->frame, gif->bgindex, gif->width * gif->height);
+    memset(gif->frame, gif->bgindex, gif->width * gif->height);
     gif->anim_start = lseek(fd, 0, SEEK_CUR);
     goto ok;
 fail:
@@ -398,11 +408,25 @@ read_image(gd_GIF *gif)
     /* Local Color Table? */
     if (fisrz & 0x80) {
         /* Read LCT */
-        gif->lct.size = 1 << ((fisrz & 0x07) + 1);
-        read(gif->fd, gif->lct.colors, 3 * gif->lct.size);
-        gif->palette = &gif->lct;
-    } else
-        gif->palette = &gif->gct;
+        uint16_t lct_size = 1 << ((fisrz & 0x07) + 1);
+        uint8_t local_palette[256 * 3];
+        read(gif->fd, local_palette, 3 * lct_size);
+        uint32_t i;
+        for(i = 0; i < lct_size; i++) {
+            gif->palette[i * 4 + 0] = local_palette[i * 3 + 2];
+            gif->palette[i * 4 + 1] = local_palette[i * 3 + 1];
+            gif->palette[i * 4 + 2] = local_palette[i * 3 + 0];
+            gif->palette[i * 4 + 3] = 0xFF;
+        }
+    } else {
+        uint32_t i;
+        for(i = 0; i < gif->gct_size; i++) {
+            gif->palette[i * 4 + 0] = gif->global_palette[i * 3 + 2];
+            gif->palette[i * 4 + 1] = gif->global_palette[i * 3 + 1];
+            gif->palette[i * 4 + 2] = gif->global_palette[i * 3 + 0];
+            gif->palette[i * 4 + 3] = 0xFF;
+        }
+    }
     /* Image Data. */
     return read_image_data(gif, interlace);
 }
@@ -416,10 +440,8 @@ render_frame_rect(gd_GIF *gif, uint8_t *buffer)
     for (y = 0; y < gif->fh; y++) {
         for (x = 0; x < gif->fw; x++) {
             index = gif->frame[(gif->fy + y) * gif->width + gif->fx + x];
-//            color = &gif->palette->colors[index*3];
             if (!gif->gce.transparency || index != gif->gce.tindex)
                 buffer[i+x] = index;
-//                memcpy(&buffer[(i+k)*3], color, 3);
         }
         i += gif->width;
     }
@@ -428,18 +450,14 @@ render_frame_rect(gd_GIF *gif, uint8_t *buffer)
 static void
 dispose(gd_GIF *gif)
 {
-    int i, j, k;
-    uint8_t *bgcolor;
+    int i, y;
     switch (gif->gce.disposal) {
     case 2: /* Restore to background color. */
-        memset(gif->canvas, gif->palette->colors[gif->bgindex], gif->fh);
-//        bgcolor = &gif->palette->colors[gif->bgindex*3];
-//        i = gif->fy * gif->width + gif->fx;
-//        for (j = 0; j < gif->fh; j++) {
-//            for (k = 0; k < gif->fw; k++)
-//                memcpy(&gif->canvas[(i+k)*3], bgcolor, 3);
-//            i += gif->width;
-//        }
+        i = gif->fy * gif->width + gif->fx;
+        for (y = 0; y < gif->fh; y++) {
+            memset(&gif->canvas[i], gif->bgindex, gif->fw);
+            i += gif->width;
+        }
         break;
     case 3: /* Restore to previous, i.e., don't update canvas.*/
         break;

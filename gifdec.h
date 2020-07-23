@@ -4,11 +4,6 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-typedef struct gd_Palette {
-    int size;
-    uint8_t colors[0x100 * 3];
-} gd_Palette;
-
 typedef struct gd_GCE {
     uint16_t delay;
     uint8_t tindex;
@@ -24,8 +19,6 @@ typedef struct gd_GIF {
     uint16_t depth;
     uint16_t loop_count;
     gd_GCE gce;
-    gd_Palette *palette;
-    gd_Palette lct, gct;
     void (*plain_text)(
         struct gd_GIF *gif, uint16_t tx, uint16_t ty,
         uint16_t tw, uint16_t th, uint8_t cw, uint8_t ch,
@@ -34,8 +27,12 @@ typedef struct gd_GIF {
     void (*comment)(struct gd_GIF *gif);
     void (*application)(struct gd_GIF *gif, char id[8], char auth[3]);
     uint16_t fx, fy, fw, fh;
+    uint16_t gct_size;
+    uint8_t global_palette[256 * 3];
     uint8_t bgindex;
-    uint8_t *canvas, *frame;
+    uint8_t *palette;
+    uint8_t *canvas;
+    uint8_t *frame;
 } gd_GIF;
 
 gd_GIF *gd_open_gif(const char *fname);
