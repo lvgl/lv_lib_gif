@@ -32,12 +32,10 @@ typedef struct gd_GIF {
     uint8_t bgindex;
     uint8_t *palette;
     uint8_t *canvas;
-    uint8_t *frame;
 } gd_GIF;
 
 gd_GIF *gd_open_gif(const char *fname);
 int gd_get_frame(gd_GIF *gif);
-void gd_render_frame(gd_GIF *gif, uint8_t *buffer);
 void gd_rewind(gd_GIF *gif);
 void gd_close_gif(gd_GIF *gif);
 

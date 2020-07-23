@@ -81,7 +81,6 @@ gd_open_gif(const char *fname)
     if (!gif) goto fail;
     gif->palette = (uint8_t *) &gif[1];
     gif->canvas = (uint8_t *) &gif->palette[256 * 4];
-    gif->frame = &gif->canvas[width * height];
 
     gif->fd = fd;
     gif->width  = width;
@@ -101,7 +100,7 @@ gd_open_gif(const char *fname)
     gif->bgindex = bgidx;
 
     if (gif->bgindex)
-    memset(gif->frame, gif->bgindex, gif->width * gif->height);
+    memset(gif->canvas, gif->bgindex, gif->width * gif->height);
     gif->anim_start = lseek(fd, 0, SEEK_CUR);
     goto ok;
 fail:
@@ -371,9 +370,11 @@ read_image_data(gd_GIF *gif, int interlace)
             p = frm_off + entry.length - 1;
             x = p % gif->fw;
             y = p / gif->fw;
-            if (interlace)
-                y = interlaced_line_index((int) gif->fh, y);
-            gif->frame[(gif->fy + y) * gif->width + gif->fx + x] = entry.suffix;
+            if (interlace) y = interlaced_line_index((int) gif->fh, y);
+            if (!gif->gce.transparency || entry.suffix != gif->gce.tindex)
+            {
+                gif->canvas[(gif->fy + y) * gif->width + gif->fx + x] = entry.suffix;
+            }
             if (entry.prefix == 0xFFF)
                 break;
             else
@@ -432,22 +433,6 @@ read_image(gd_GIF *gif)
 }
 
 static void
-render_frame_rect(gd_GIF *gif, uint8_t *buffer)
-{
-    int i, y, x;
-    uint8_t index;
-    i = gif->fy * gif->width + gif->fx;
-    for (y = 0; y < gif->fh; y++) {
-        for (x = 0; x < gif->fw; x++) {
-            index = gif->frame[(gif->fy + y) * gif->width + gif->fx + x];
-            if (!gif->gce.transparency || index != gif->gce.tindex)
-                buffer[i+x] = index;
-        }
-        i += gif->width;
-    }
-}
-
-static void
 dispose(gd_GIF *gif)
 {
     int i, y;
@@ -461,9 +446,6 @@ dispose(gd_GIF *gif)
         break;
     case 3: /* Restore to previous, i.e., don't update canvas.*/
         break;
-    default:
-        /* Add frame non-transparent pixels to canvas. */
-        render_frame_rect(gif, gif->canvas);
     }
 }
 
@@ -486,13 +468,6 @@ gd_get_frame(gd_GIF *gif)
     if (read_image(gif) == -1)
         return -1;
     return 1;
-}
-
-void
-gd_render_frame(gd_GIF *gif, uint8_t *buffer)
-{
-    memcpy(buffer, gif->canvas, gif->width * gif->height);
-    render_frame_rect(gif, buffer);
 }
 
 void
