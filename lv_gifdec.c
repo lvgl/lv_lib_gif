@@ -39,7 +39,7 @@ static lv_img_dsc_t imgdsc;
 
 lv_obj_t * lv_gif_create(lv_obj_t * parent)
 {
-    gif = gd_open_gif("./a.gif");
+    gif = gd_open_gif("P:/a.gif");
 
     imgdsc.data = gif->palette;
     imgdsc.header.always_zero = 0;
