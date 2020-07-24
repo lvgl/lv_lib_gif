@@ -15,6 +15,8 @@ typedef struct gd_GCE {
 
 typedef struct gd_GIF {
     lv_fs_file_t * fd;
+    const char * data;
+    uint32_t f_rw_p;    /*Read-Write pointer if data is used directly instead of file*/
     off_t anim_start;
     uint16_t width, height;
     uint16_t depth;
@@ -28,7 +30,12 @@ typedef struct gd_GIF {
     uint8_t *canvas;
 } gd_GIF;
 
-gd_GIF *gd_open_gif(const char *fname);
+gd_GIF *
+gd_open_gif_file(const char *fname);
+
+gd_GIF *
+gd_open_gif_data(const void *data);
+
 int gd_get_frame(gd_GIF *gif);
 void gd_rewind(gd_GIF *gif);
 void gd_close_gif(gd_GIF *gif);
