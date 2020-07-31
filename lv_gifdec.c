@@ -68,7 +68,6 @@ lv_obj_t * lv_gif_create_form_file(lv_obj_t * parent, const char * path)
     return img;
 }
 
-
 lv_obj_t * lv_gif_create_form_data(lv_obj_t * parent, const void * data)
 {
 
@@ -95,6 +94,12 @@ lv_obj_t * lv_gif_create_form_data(lv_obj_t * parent, const void * data)
     return img;
 }
 
+void lv_gif_restart(lv_obj_t * gif)
+{
+    lv_gif_ext_t * ext = lv_obj_get_ext_attr(gif);
+    gd_rewind(ext->gif);
+}
+
 /**********************
  *   STATIC FUNCTIONS
  **********************/
@@ -110,7 +115,11 @@ static void next_frame_task_cb(lv_task_t * t)
     lv_obj_t * img = t->user_data;
     lv_gif_ext_t * ext = lv_obj_get_ext_attr(img);
 
-    gd_get_frame(ext->gif);
+    int has_next = gd_get_frame(ext->gif);
+    if(has_next == 0) {
+        lv_event_send(img, LV_EVENT_LEAVE);
+    }
+
     lv_obj_invalidate(img);
 
     counter = ext->gif->gce.delay;

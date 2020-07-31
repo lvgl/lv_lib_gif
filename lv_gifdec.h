@@ -33,6 +33,7 @@ extern "C" {
 
 lv_obj_t * lv_gif_create_form_file(lv_obj_t * parent, const char * path);
 lv_obj_t * lv_gif_create_form_data(lv_obj_t * parent, const void * data);
+void lv_gif_restart(lv_obj_t * gif);
 
 /**********************
  *      MACROS
