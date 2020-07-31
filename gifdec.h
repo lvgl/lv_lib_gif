@@ -3,7 +3,12 @@
 
 #include <stdint.h>
 #include <sys/types.h>
-#include <lvgl/lvgl.h>
+
+#if defined(LV_LVGL_H_INCLUDE_SIMPLE)
+#include "lvgl.h"
+#else
+#include "../lvgl/lvgl.h"
+#endif
 
 typedef struct gd_GCE {
     uint16_t delay;

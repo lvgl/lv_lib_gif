@@ -117,7 +117,7 @@ static void next_frame_task_cb(lv_task_t * t)
 
     int has_next = gd_get_frame(ext->gif);
     if(has_next == 0) {
-        lv_event_send(img, LV_EVENT_LEAVE);
+        lv_event_send(img, LV_EVENT_LEAVE, NULL);
     }
 
     lv_obj_invalidate(img);
