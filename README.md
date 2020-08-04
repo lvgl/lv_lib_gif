@@ -4,7 +4,7 @@ Allow to use of GIF images in LVGL from.
 Based on https://github.com/lecram/gifdec
 
 Compatible with LVGL's `feat/new-fs-api` branch. 
-If you use the [lv_fs_if](https://github.com/lvgl/lv_fs_if) repository it's `new-api` branch should be used.
+If you use the [lv_fs_if](https://github.com/lvgl/lv_fs_if) repository its `new-api` branch should be used.
 
 
 ## Get started
