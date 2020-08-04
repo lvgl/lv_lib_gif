@@ -1,10 +1,10 @@
 /**
- * @file lv_templ.h
+ * @file lv_gif.h
  *
  */
 
-#ifndef LV_GIFDEC_H
-#define LV_GIFDEC_H
+#ifndef LV_GIF_H
+#define LV_GIF_H
 
 #ifdef __cplusplus
 extern "C" {
