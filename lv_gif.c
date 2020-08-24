@@ -54,7 +54,8 @@ lv_obj_t * lv_gif_create_form_file(lv_obj_t * parent, const char * path)
     lv_obj_set_signal_cb(img, lv_gif_signal);
 
     ext->gif = gd_open_gif_file(path);
-
+    if(ext->gif == NULL) return img;
+    
     ext->imgdsc.data = ext->gif->palette;
     ext->imgdsc.header.always_zero = 0;
     ext->imgdsc.header.cf = LV_IMG_CF_INDEXED_8BIT;
@@ -80,6 +81,7 @@ lv_obj_t * lv_gif_create_form_data(lv_obj_t * parent, const void * data)
     lv_obj_set_signal_cb(img, lv_gif_signal);
 
     ext->gif = gd_open_gif_data(data);
+    if(ext->gif == NULL) return img;
 
     ext->imgdsc.data = ext->gif->palette;
     ext->imgdsc.header.always_zero = 0;
