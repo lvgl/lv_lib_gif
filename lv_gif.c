@@ -42,7 +42,7 @@ static lv_signal_cb_t ancestor_signal;
  *   GLOBAL FUNCTIONS
  **********************/
 
-lv_obj_t * lv_gif_create_form_file(lv_obj_t * parent, const char * path)
+lv_obj_t * lv_gif_create_from_file(lv_obj_t * parent, const char * path)
 {
 
     lv_obj_t * img = lv_img_create(parent, NULL);
@@ -69,7 +69,7 @@ lv_obj_t * lv_gif_create_form_file(lv_obj_t * parent, const char * path)
     return img;
 }
 
-lv_obj_t * lv_gif_create_form_data(lv_obj_t * parent, const void * data)
+lv_obj_t * lv_gif_create_from_data(lv_obj_t * parent, const void * data)
 {
 
     lv_obj_t * img = lv_img_create(parent, NULL);
