@@ -23,5 +23,6 @@ If the gif file stored in the flash as a C array:
 ```c
 lv_obj_t * img = lv_gif_create_from_data(parent, gif_data);
 ```
-
+### Convert GIF files to C array
+To convert a GIF file to byte values array use [LVGL's online converter](https://lvgl.io/tools/imageconverter). Select "Raw" color format and "C array" Output format.
 
