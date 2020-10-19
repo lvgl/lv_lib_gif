@@ -494,13 +494,21 @@ gd_close_gif(gd_GIF *gif)
 static bool f_gif_open(gd_GIF * gif, const void * path, bool is_file)
 {
     gif->f_rw_p = 0;
-    gif->fd = NULL;
     gif->data = NULL;
+#if LV_USE_FILESYSTEM
+    gif->fd = NULL;
+#endif
+
     if(is_file) {
+#if LV_USE_FILESYSTEM
         gif->fd = lv_fs_open(path, LV_FS_MODE_RD);
         if(gif->fd == NULL) return false;
         else return true;
-    } else {
+#else
+        return false;
+#endif
+    } else
+    {
         gif->data = path;
         return true;
     }
@@ -508,9 +516,12 @@ static bool f_gif_open(gd_GIF * gif, const void * path, bool is_file)
 
 static void f_gif_read(gd_GIF * gif, void * buf, size_t len)
 {
+#if LV_USE_FILESYSTEM
     if(gif->fd) {
         lv_fs_read(gif->fd, buf, len, NULL);
-    } else {
+    } else
+#endif
+    {
         memcpy(buf, &gif->data[gif->f_rw_p], len);
         gif->f_rw_p += len;
     }
@@ -518,6 +529,7 @@ static void f_gif_read(gd_GIF * gif, void * buf, size_t len)
 
 static int f_gif_seek(gd_GIF * gif, size_t pos, int k)
 {
+#if LV_USE_FILESYSTEM
     if(k == SEEK_CUR) k = LV_FS_SEEK_CUR;
     else if(k == SEEK_SET) k = LV_FS_SEEK_SET;
     if(gif->fd) {
@@ -530,11 +542,18 @@ static int f_gif_seek(gd_GIF * gif, size_t pos, int k)
         else if(k == LV_FS_SEEK_SET) gif->f_rw_p = pos;
         return gif->f_rw_p;
     }
+#else
+    if(k == SEEK_CUR) gif->f_rw_p += pos;
+    else if(k == SEEK_SET) gif->f_rw_p = pos;
+    return gif->f_rw_p;
+#endif
 }
 
 static void f_gif_close(gd_GIF * gif)
 {
+#if LV_USE_FILESYSTEM
     if(gif->fd) {
         lv_fs_close(gif->fd);
     }
+#endif
 }

@@ -19,7 +19,10 @@ typedef struct gd_GCE {
 } gd_GCE;
 
 typedef struct gd_GIF {
+#if LV_USE_FILESYSTEM
     lv_fs_file_t * fd;
+#endif
+
     const char * data;
     uint32_t f_rw_p;    /*Read-Write pointer if data is used directly instead of file*/
     off_t anim_start;
