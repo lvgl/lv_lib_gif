@@ -27,7 +27,7 @@ typedef struct {
  *  STATIC PROTOTYPES
  **********************/
 static void next_frame_task_cb(lv_task_t * t);
-static lv_res_t lv_gif_signal(lv_obj_t * btn, lv_signal_t sign, void * param);
+static lv_res_t lv_gif_signal(lv_obj_t * img, lv_signal_t sign, void * param);
 
 /**********************
  *  STATIC VARIABLES
@@ -129,7 +129,7 @@ static void next_frame_task_cb(lv_task_t * t)
 
 /**
  * Signal function of the image
- * @param btn pointer to a button object
+ * @param img pointer to a image object
  * @param sign a signal type from lv_signal_t enum
  * @param param pointer to a signal specific variable
  * @return LV_RES_OK: the object is not deleted in the function; LV_RES_INV: the object is deleted
