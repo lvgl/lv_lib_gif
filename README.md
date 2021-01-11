@@ -15,13 +15,14 @@ If you use the [lv_fs_if](https://github.com/lvgl/lv_fs_if) repository its `new-
 
 ## Use GIF images from file
 ```c
-lv_obj_t * img = lv_gif_create_from_file(parent, "S/path/to/img.gif");
+lv_obj_t * img = lv_gif_create_from_file(parent, "S/path/to/example.gif");
 ```
 
 ## Use GIF images from flash
 If the gif file stored in the flash as a C array: 
 ```c
-lv_obj_t * img = lv_gif_create_from_data(parent, gif_data);
+extern const uint8_t example_gif_map[];  /*Use the example gif*/
+lv_obj_t * img = lv_gif_create_from_data(parent, example_gif_map);
 ```
 ### Convert GIF files to C array
 To convert a GIF file to byte values array use [LVGL's online converter](https://lvgl.io/tools/imageconverter). Select "Raw" color format and "C array" Output format.

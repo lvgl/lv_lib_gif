@@ -21,6 +21,7 @@ typedef struct {
     gd_GIF *gif;
     lv_task_t * task;
     lv_img_dsc_t imgdsc;
+    uint32_t last_call;
 }lv_gif_ext_t;
 
 /**********************
@@ -61,6 +62,7 @@ lv_obj_t * lv_gif_create_from_file(lv_obj_t * parent, const char * path)
     ext->imgdsc.header.cf = LV_IMG_CF_INDEXED_8BIT;
     ext->imgdsc.header.h = ext->gif->height;
     ext->imgdsc.header.w = ext->gif->width;
+    ext->last_call = lv_tick_get();
 
     lv_img_set_src(img, &ext->imgdsc);
 
@@ -76,7 +78,6 @@ lv_obj_t * lv_gif_create_from_data(lv_obj_t * parent, const void * data)
     lv_gif_ext_t * ext = lv_obj_allocate_ext_attr(img, sizeof(lv_gif_ext_t));
     LV_ASSERT_MEM(ext);
 
-
     if(ancestor_signal == NULL) ancestor_signal = lv_obj_get_signal_cb(img);
     lv_obj_set_signal_cb(img, lv_gif_signal);
 
@@ -88,6 +89,7 @@ lv_obj_t * lv_gif_create_from_data(lv_obj_t * parent, const void * data)
     ext->imgdsc.header.cf = LV_IMG_CF_INDEXED_8BIT;
     ext->imgdsc.header.h = ext->gif->height;
     ext->imgdsc.header.w = ext->gif->width;
+    ext->last_call = lv_tick_get();
 
     lv_img_set_src(img, &ext->imgdsc);
 
@@ -108,23 +110,20 @@ void lv_gif_restart(lv_obj_t * gif)
 
 static void next_frame_task_cb(lv_task_t * t)
 {
-    static uint32_t counter = 0;
-    if(counter > 0) {
-        counter --;
-        return;
-    }
-
     lv_obj_t * img = t->user_data;
     lv_gif_ext_t * ext = lv_obj_get_ext_attr(img);
+    uint32_t elaps = lv_tick_elaps(ext->last_call);
+    if(elaps < ext->gif->gce.delay * 10) return;
+
+    ext->last_call = lv_tick_get();
 
     int has_next = gd_get_frame(ext->gif);
     if(has_next == 0) {
-        lv_event_send(img, LV_EVENT_LEAVE, NULL);
+        lv_res_t res = lv_event_send(img, LV_EVENT_LEAVE, NULL);
+        if(res != LV_RES_OK) return;
     }
 
     lv_obj_invalidate(img);
-
-    counter = ext->gif->gce.delay;
 }
 
 /**
