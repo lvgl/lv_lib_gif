@@ -28,7 +28,7 @@ typedef struct {
  *  STATIC PROTOTYPES
  **********************/
 static void next_frame_task_cb(lv_task_t * t);
-static lv_res_t lv_gif_signal(lv_obj_t * btn, lv_signal_t sign, void * param);
+static lv_res_t lv_gif_signal(lv_obj_t * img, lv_signal_t sign, void * param);
 
 /**********************
  *  STATIC VARIABLES
@@ -101,6 +101,7 @@ lv_obj_t * lv_gif_create_from_data(lv_obj_t * parent, const void * data)
 void lv_gif_restart(lv_obj_t * gif)
 {
     lv_gif_ext_t * ext = lv_obj_get_ext_attr(gif);
+    lv_task_set_prio(ext->task, LV_TASK_PRIO_HIGH);
     gd_rewind(ext->gif);
 }
 
@@ -119,6 +120,9 @@ static void next_frame_task_cb(lv_task_t * t)
 
     int has_next = gd_get_frame(ext->gif);
     if(has_next == 0) {
+        lv_res_t res = lv_signal_send(img, LV_SIGNAL_LEAVE, NULL);
+        if(res != LV_RES_OK) return;
+      
         lv_res_t res = lv_event_send(img, LV_EVENT_LEAVE, NULL);
         if(res != LV_RES_OK) return;
     }
@@ -128,7 +132,7 @@ static void next_frame_task_cb(lv_task_t * t)
 
 /**
  * Signal function of the image
- * @param btn pointer to a button object
+ * @param img pointer to a image object
  * @param sign a signal type from lv_signal_t enum
  * @param param pointer to a signal specific variable
  * @return LV_RES_OK: the object is not deleted in the function; LV_RES_INV: the object is deleted
@@ -142,10 +146,13 @@ static lv_res_t lv_gif_signal(lv_obj_t * img, lv_signal_t sign, void * param)
     if(res != LV_RES_OK) return res;
     if(sign == LV_SIGNAL_GET_TYPE) return lv_obj_handle_get_type_signal(param, LV_OBJX_NAME);
 
+    lv_gif_ext_t * ext = lv_obj_get_ext_attr(img);
+
     if(sign == LV_SIGNAL_CLEANUP) {
-        lv_gif_ext_t * ext = lv_obj_get_ext_attr(img);
         gd_close_gif(ext->gif);
         lv_task_del(ext->task);
+    } else if (sign == LV_SIGNAL_LEAVE) {
+        lv_task_set_prio(ext->task, LV_TASK_PRIO_OFF);
     }
 
     return LV_RES_OK;
