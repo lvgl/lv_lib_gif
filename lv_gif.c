@@ -123,7 +123,7 @@ static void next_frame_task_cb(lv_task_t * t)
         lv_res_t res = lv_signal_send(img, LV_SIGNAL_LEAVE, NULL);
         if(res != LV_RES_OK) return;
       
-        lv_res_t res = lv_event_send(img, LV_EVENT_LEAVE, NULL);
+        res = lv_event_send(img, LV_EVENT_LEAVE, NULL);
         if(res != LV_RES_OK) return;
     }
 
