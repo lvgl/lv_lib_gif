@@ -436,6 +436,10 @@ read_image(gd_GIF *gif)
             gif->palette[i * 4 + 3] = 0xFF;
         }
     }
+
+    /*Make the transparent BG color transparent in the palette*/
+    if(gif->gce.transparency) gif->palette[gif->gce.tindex * 4 + 3] = 0x00;
+
     /* Image Data. */
     return read_image_data(gif, interlace);
 }

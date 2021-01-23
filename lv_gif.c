@@ -67,6 +67,7 @@ lv_obj_t * lv_gif_create_from_file(lv_obj_t * parent, const char * path)
     lv_img_set_src(img, &ext->imgdsc);
 
     ext->task = lv_task_create(next_frame_task_cb, 10, LV_TASK_PRIO_HIGH, img);
+    next_frame_task_cb(ext->task);    /*Immediately process the first frame*/
 
     return img;
 }
@@ -94,7 +95,7 @@ lv_obj_t * lv_gif_create_from_data(lv_obj_t * parent, const void * data)
     lv_img_set_src(img, &ext->imgdsc);
 
     ext->task = lv_task_create(next_frame_task_cb, 10, LV_TASK_PRIO_HIGH, img);
-
+    next_frame_task_cb(ext->task);    /*Immediately process the first frame*/
     return img;
 }
 
@@ -127,6 +128,7 @@ static void next_frame_task_cb(lv_task_t * t)
         if(res != LV_RES_OK) return;
     }
 
+    lv_img_cache_invalidate_src(lv_img_get_src(img));
     lv_obj_invalidate(img);
 }
 
