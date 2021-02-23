@@ -489,6 +489,47 @@ gd_close_gif(gd_GIF *gif)
     lv_mem_free(gif);
 }
 
+#if LV_USE_FILESYSTEM && LVGL_VERSION_MAJOR <= 7
+enum {
+    LV_FS_SEEK_SET = 0x00,
+    LV_FS_SEEK_CUR = 0x01,
+    LV_FS_SEEK_END = 0x02,
+};
+typedef uint8_t lv_fs_whence_t;
+
+static void * lv_fs_open_to_old(const char * path, lv_fs_mode_t mode)
+{
+    lv_fs_file_t * file_p = lv_mem_alloc(sizeof(lv_fs_file_t));
+    lv_fs_open(file_p, path, mode);
+    return file_p;
+}
+
+static lv_fs_res_t lv_fs_close_to_old(lv_fs_file_t * file_p)
+{
+    lv_fs_close(file_p);
+    lv_mem_free(file_p);
+
+    return LV_FS_RES_OK;
+}
+
+static lv_fs_res_t lv_fs_seek_to_old(lv_fs_file_t * file_p, uint32_t pos, lv_fs_whence_t whence)
+{
+    uint32_t read_pos = 0;
+    uint32_t res_pos  = 0;
+    lv_fs_tell(file_p, &read_pos);
+
+    if(whence == LV_FS_SEEK_SET){
+        res_pos = pos;
+    }
+    else {
+        res_pos = read_pos + pos;
+    }
+    lv_fs_seek(file_p, res_pos);
+
+    return LV_FS_RES_OK;
+}
+#endif
+
 static bool f_gif_open(gd_GIF * gif, const void * path, bool is_file)
 {
     gif->f_rw_p = 0;
@@ -499,8 +540,13 @@ static bool f_gif_open(gd_GIF * gif, const void * path, bool is_file)
 
     if(is_file) {
 #if LV_USE_FILESYSTEM
+#   if LVGL_VERSION_MAJOR > 7
         gif->fd = lv_fs_open(path, LV_FS_MODE_RD);
+#   else
+        gif->fd = lv_fs_open_to_old(path, LV_FS_MODE_RD);
+#   endif
         if(gif->fd == NULL) return false;
+
         else return true;
 #else
         return false;
@@ -531,7 +577,11 @@ static int f_gif_seek(gd_GIF * gif, size_t pos, int k)
     if(k == SEEK_CUR) k = LV_FS_SEEK_CUR;
     else if(k == SEEK_SET) k = LV_FS_SEEK_SET;
     if(gif->fd) {
+#   if LVGL_VERSION_MAJOR > 7
         lv_fs_seek(gif->fd, pos, k);
+#   else
+        lv_fs_seek_to_old(gif->fd, pos, k);
+#   endif
         uint32_t x;
         lv_fs_tell(gif->fd, &x);
         return x;
@@ -551,7 +601,11 @@ static void f_gif_close(gd_GIF * gif)
 {
 #if LV_USE_FILESYSTEM
     if(gif->fd) {
+#   if LVGL_VERSION_MAJOR > 7
         lv_fs_close(gif->fd);
+#   else
+        lv_fs_close_to_old(gif->fd);
+#   endif
     }
 #endif
 }
