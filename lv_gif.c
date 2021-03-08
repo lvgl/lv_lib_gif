@@ -45,31 +45,33 @@ static lv_signal_cb_t ancestor_signal;
 
 lv_obj_t * lv_gif_create_from_file(lv_obj_t * parent, const char * path)
 {
+    return NULL;
 
-    lv_obj_t * img = lv_img_create(parent, NULL);
-    lv_gif_ext_t * ext = lv_obj_allocate_ext_attr(img, sizeof(lv_gif_ext_t));
-    LV_ASSERT_MEM(ext);
-
-
-    if(ancestor_signal == NULL) ancestor_signal = lv_obj_get_signal_cb(img);
-    lv_obj_set_signal_cb(img, lv_gif_signal);
-
-    ext->gif = gd_open_gif_file(path);
-    if(ext->gif == NULL) return img;
+    //    lv_obj_t * img = lv_img_create(parent, NULL);
+//    lv_gif_ext_t * ext = lv_obj_allocate_ext_attr(img, sizeof(lv_gif_ext_t));
+//    LV_ASSERT_MEM(ext);
+//
+//
+//    if(ancestor_signal == NULL) ancestor_signal = lv_obj_get_signal_cb(img);
+//    lv_obj_set_signal_cb(img, lv_gif_signal);
+//
+//    ext->gif = gd_open_gif_file(path);
+//    if(ext->gif == NULL) return img;
+//
+//    ext->imgdsc.data = ext->gif->palette;
+//    ext->imgdsc.header.always_zero = 0;
+//    ext->imgdsc.header.cf = LV_IMG_CF_INDEXED_8BIT;
+//    ext->imgdsc.header.h = ext->gif->height;
+//    ext->imgdsc.header.w = ext->gif->width;
+//    ext->last_call = lv_tick_get();
+//
+//    lv_img_set_src(img, &ext->imgdsc);
+//
+//    ext->task = lv_task_create(next_frame_task_cb, 10, LV_TASK_PRIO_HIGH, img);
+//    next_frame_task_cb(ext->task);    /*Immediately process the first frame*/
+//
+//    return img;
     
-    ext->imgdsc.data = ext->gif->palette;
-    ext->imgdsc.header.always_zero = 0;
-    ext->imgdsc.header.cf = LV_IMG_CF_INDEXED_8BIT;
-    ext->imgdsc.header.h = ext->gif->height;
-    ext->imgdsc.header.w = ext->gif->width;
-    ext->last_call = lv_tick_get();
-
-    lv_img_set_src(img, &ext->imgdsc);
-
-    ext->task = lv_task_create(next_frame_task_cb, 10, LV_TASK_PRIO_HIGH, img);
-    next_frame_task_cb(ext->task);    /*Immediately process the first frame*/
-
-    return img;
 }
 
 lv_obj_t * lv_gif_create_from_data(lv_obj_t * parent, const void * data)
@@ -85,9 +87,9 @@ lv_obj_t * lv_gif_create_from_data(lv_obj_t * parent, const void * data)
     ext->gif = gd_open_gif_data(data);
     if(ext->gif == NULL) return img;
 
-    ext->imgdsc.data = ext->gif->palette;
+    ext->imgdsc.data = ext->gif->canvas;//lv_mem_alloc(ext->gif->height * ext->gif->width * LV_IMG_PX_SIZE_ALPHA_BYTE);
     ext->imgdsc.header.always_zero = 0;
-    ext->imgdsc.header.cf = LV_IMG_CF_INDEXED_8BIT;
+    ext->imgdsc.header.cf = LV_IMG_CF_TRUE_COLOR_ALPHA;
     ext->imgdsc.header.h = ext->gif->height;
     ext->imgdsc.header.w = ext->gif->width;
     ext->last_call = lv_tick_get();
@@ -127,6 +129,8 @@ static void next_frame_task_cb(lv_task_t * t)
         res = lv_event_send(img, LV_EVENT_LEAVE, NULL);
         if(res != LV_RES_OK) return;
     }
+
+    gd_render_frame(ext->gif, ext->imgdsc.data);
 
     lv_img_cache_invalidate_src(lv_img_get_src(img));
     lv_obj_invalidate(img);
