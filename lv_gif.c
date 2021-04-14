@@ -151,6 +151,7 @@ static lv_res_t lv_gif_signal(lv_obj_t * img, lv_signal_t sign, void * param)
     lv_gif_ext_t * ext = lv_obj_get_ext_attr(img);
 
     if(sign == LV_SIGNAL_CLEANUP) {
+        lv_img_cache_invalidate_src(&ext->imgdsc);
         gd_close_gif(ext->gif);
         lv_task_del(ext->task);
     } else if (sign == LV_SIGNAL_LEAVE) {
