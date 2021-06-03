@@ -24,11 +24,9 @@ typedef struct gd_GCE {
 } gd_GCE;
 
 typedef struct gd_GIF {
-#if LV_USE_FILESYSTEM
-    lv_fs_file_t * fd;
-#endif
-
+    lv_fs_file_t fd;
     const char * data;
+    uint8_t is_file;
     uint32_t f_rw_p;
     off_t anim_start;
     uint16_t width, height;

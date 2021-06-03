@@ -64,7 +64,6 @@ gd_open_gif_data(const void *data)
 
 static gd_GIF * gif_open(gd_GIF * gif_base)
 {
-    int fd;
     uint8_t sigver[3];
     uint16_t width, height, depth;
     uint8_t fdsz, bgidx, aspect;
@@ -569,8 +568,8 @@ gd_get_frame(gd_GIF *gif)
 void
 gd_render_frame(gd_GIF *gif, uint8_t *buffer)
 {
-    uint32_t i;
-    uint32_t j;
+//    uint32_t i;
+//    uint32_t j;
 //    for(i = 0, j = 0; i < gif->width * gif->height * 3; i+= 3, j+=4) {
 //        buffer[j + 0] = gif->canvas[i + 2];
 //        buffer[j + 1] = gif->canvas[i + 1];
@@ -600,70 +599,17 @@ gd_close_gif(gd_GIF *gif)
     lv_mem_free(gif);
 }
 
-#if LV_USE_FILESYSTEM && LVGL_VERSION_MAJOR <= 7
-enum {
-    LV_FS_SEEK_SET = 0x00,
-    LV_FS_SEEK_CUR = 0x01,
-    LV_FS_SEEK_END = 0x02,
-};
-typedef uint8_t lv_fs_whence_t;
-
-static void * lv_fs_open_to_old(const char * path, lv_fs_mode_t mode)
-{
-    lv_fs_file_t * file_p = lv_mem_alloc(sizeof(lv_fs_file_t));
-    lv_fs_open(file_p, path, mode);
-    return file_p;
-}
-
-static lv_fs_res_t lv_fs_close_to_old(lv_fs_file_t * file_p)
-{
-    lv_fs_close(file_p);
-    lv_mem_free(file_p);
-
-    return LV_FS_RES_OK;
-}
-
-static lv_fs_res_t lv_fs_seek_to_old(lv_fs_file_t * file_p, uint32_t pos, lv_fs_whence_t whence)
-{
-    uint32_t read_pos = 0;
-    uint32_t res_pos  = 0;
-    lv_fs_tell(file_p, &read_pos);
-
-    if(whence == LV_FS_SEEK_SET){
-        res_pos = pos;
-    }
-    else {
-        res_pos = read_pos + pos;
-    }
-    lv_fs_seek(file_p, res_pos);
-
-    return LV_FS_RES_OK;
-}
-#endif
-
 static bool f_gif_open(gd_GIF * gif, const void * path, bool is_file)
 {
     gif->f_rw_p = 0;
     gif->data = NULL;
-#if LV_USE_FILESYSTEM
-    gif->fd = NULL;
-#endif
+    gif->is_file = is_file;
 
     if(is_file) {
-#if LV_USE_FILESYSTEM
-#   if LVGL_VERSION_MAJOR > 7
-        gif->fd = lv_fs_open(path, LV_FS_MODE_RD);
-#   else
-        gif->fd = lv_fs_open_to_old(path, LV_FS_MODE_RD);
-#   endif
-        if(gif->fd == NULL) return false;
-
+        lv_fs_res_t res = lv_fs_open(&gif->fd, path, LV_FS_MODE_RD);
+        if(res == LV_RES_OK) return false;
         else return true;
-#else
-        return false;
-#endif
-    } else
-    {
+    } else {
         gif->data = path;
         return true;
     }
@@ -671,11 +617,9 @@ static bool f_gif_open(gd_GIF * gif, const void * path, bool is_file)
 
 static void f_gif_read(gd_GIF * gif, void * buf, size_t len)
 {
-#if LV_USE_FILESYSTEM
-    if(gif->fd) {
-        lv_fs_read(gif->fd, buf, len, NULL);
+    if(gif->is_file) {
+        lv_fs_read(&gif->fd, buf, len, NULL);
     } else
-#endif
     {
         memcpy(buf, &gif->data[gif->f_rw_p], len);
         gif->f_rw_p += len;
@@ -684,39 +628,23 @@ static void f_gif_read(gd_GIF * gif, void * buf, size_t len)
 
 static int f_gif_seek(gd_GIF * gif, size_t pos, int k)
 {
-#if LV_USE_FILESYSTEM
     if(k == SEEK_CUR) k = LV_FS_SEEK_CUR;
     else if(k == SEEK_SET) k = LV_FS_SEEK_SET;
-    if(gif->fd) {
-#   if LVGL_VERSION_MAJOR > 7
-        lv_fs_seek(gif->fd, pos, k);
-#   else
-        lv_fs_seek_to_old(gif->fd, pos, k);
-#   endif
+    if(gif->is_file) {
+        lv_fs_seek(&gif->fd, pos, k);
         uint32_t x;
-        lv_fs_tell(gif->fd, &x);
+        lv_fs_tell(&gif->fd, &x);
         return x;
     } else {
         if(k == LV_FS_SEEK_CUR) gif->f_rw_p += pos;
         else if(k == LV_FS_SEEK_SET) gif->f_rw_p = pos;
         return gif->f_rw_p;
     }
-#else
-    if(k == SEEK_CUR) gif->f_rw_p += pos;
-    else if(k == SEEK_SET) gif->f_rw_p = pos;
-    return gif->f_rw_p;
-#endif
 }
 
 static void f_gif_close(gd_GIF * gif)
 {
-#if LV_USE_FILESYSTEM
-    if(gif->fd) {
-#   if LVGL_VERSION_MAJOR > 7
-        lv_fs_close(gif->fd);
-#   else
-        lv_fs_close_to_old(gif->fd);
-#   endif
+    if(gif->is_file) {
+        lv_fs_close(&gif->fd);
     }
-#endif
 }

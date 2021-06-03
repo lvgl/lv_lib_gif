@@ -18,7 +18,9 @@ extern "C" {
 #else
 #include <lvgl/lvgl.h>
 #endif
-  
+
+#include "gifdec.h"
+
 /*********************
  *      DEFINES
  *********************/
@@ -26,6 +28,16 @@ extern "C" {
 /**********************
  *      TYPEDEFS
  **********************/
+
+typedef struct {
+    lv_img_t img;
+    gd_GIF *gif;
+    lv_timer_t * timer;
+    lv_img_dsc_t imgdsc;
+    uint32_t last_call;
+}lv_gif_t;
+
+extern const lv_obj_class_t lv_gif_class;
 
 /**********************
  * GLOBAL PROTOTYPES
