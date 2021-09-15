@@ -2,7 +2,6 @@
 #define GIFDEC_H
 
 #include <stdint.h>
-#include <sys/types.h>
 
 #if defined(LV_LVGL_H_INCLUDE_SIMPLE)
 #include "lvgl.h"
@@ -28,7 +27,7 @@ typedef struct gd_GIF {
     const char * data;
     uint8_t is_file;
     uint32_t f_rw_p;
-    off_t anim_start;
+    int32_t anim_start;
     uint16_t width, height;
     uint16_t depth;
     uint16_t loop_count;

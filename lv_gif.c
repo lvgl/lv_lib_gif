@@ -52,7 +52,7 @@ lv_obj_t * lv_gif_create_from_file(lv_obj_t * parent, const char * path)
     create_data = NULL;
     create_path = path;
 
-    LV_LOG_INFO("begin")
+    LV_LOG_INFO("begin");
     lv_obj_t * obj = lv_obj_class_create_obj(MY_CLASS, parent);
     lv_obj_class_init_obj(obj);
     return obj;
@@ -64,7 +64,7 @@ lv_obj_t * lv_gif_create_from_data(lv_obj_t * parent, const void * data)
     create_data = data;
     create_path = NULL;
 
-    LV_LOG_INFO("begin")
+    LV_LOG_INFO("begin");
     lv_obj_t * obj = lv_obj_class_create_obj(MY_CLASS, parent);
     lv_obj_class_init_obj(obj);
     return obj;
