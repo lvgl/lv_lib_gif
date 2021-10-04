@@ -1,4 +1,7 @@
 # GIF decoder for LVGL
+
+**This repository is merged into the lvgl repository. See https://docs.lvgl.io/master/libs/gif.html**
+
 Allow to use of GIF images in LVGL from. 
 
 Based on https://github.com/lecram/gifdec
