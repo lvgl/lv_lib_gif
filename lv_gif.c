@@ -119,7 +119,7 @@ static void next_frame_task_cb(lv_task_t * t)
     int has_next = gd_get_frame(ext->gif);
     if(has_next == 0) {
         /*It was the last repeat*/
-        if(ext->gif->loop_count == 1) {
+        if(ext->gif->loop_count >= 0) {
             lv_res_t res = lv_signal_send(img, LV_SIGNAL_LEAVE, NULL);
             if(res != LV_RES_OK) return;
 
