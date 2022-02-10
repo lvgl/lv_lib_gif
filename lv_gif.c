@@ -126,8 +126,16 @@ static void next_frame_task_cb(lv_task_t * t)
             res = lv_event_send(img, LV_EVENT_LEAVE, NULL);
             if(res != LV_RES_OK) return;
         } else {
-            if(ext->gif->loop_count > 1)  ext->gif->loop_count--;
-            gd_rewind(ext->gif);
+            
+            if(ext->gif->loop_count == 0) {
+                lv_res_t res = lv_event_send(img, LV_EVENT_LEAVE, NULL);
+                if(res != LV_RES_OK) return;
+            }
+
+            if(ext->gif->loop_count > 1) {
+                ext->gif->loop_count--;
+                gd_rewind(ext->gif);
+            }
         }
     }
 
