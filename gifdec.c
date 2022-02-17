@@ -135,7 +135,7 @@ static gd_GIF * gif_open(gd_GIF * gif_base)
         memset(gif->frame, gif->bgindex, gif->width * gif->height);
     bgcolor = &gif->palette->colors[gif->bgindex*3];
 
-    if (bgcolor[0] || bgcolor[1] || bgcolor [2])
+    //if (bgcolor[0] || bgcolor[1] || bgcolor [2])
         for (i = 0; i < gif->width * gif->height; i++) {
 #if LV_COLOR_DEPTH == 32
             gif->canvas[i*4 + 0] = *(bgcolor + 2);
